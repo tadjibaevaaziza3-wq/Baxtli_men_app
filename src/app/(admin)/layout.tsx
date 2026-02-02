@@ -30,9 +30,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     ];
 
     return (
-        <div className="flex h-screen bg-bm-surface">
+        <div className="flex h-screen bg-bm-bg">
             {/* Sidebar */}
-            <aside className="w-64 bg-white border-r border-bm-border flex flex-col">
+            <aside className="w-64 bg-bm-surface border-r border-bm-border flex flex-col">
                 <div className="p-8">
                     <Logo />
                 </div>

@@ -6,7 +6,7 @@ export default function TMALayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="max-w-md mx-auto shadow-2xl min-h-screen relative overflow-hidden">
+        <div className="max-w-md mx-auto shadow-2xl min-h-screen relative overflow-hidden bg-bm-bg">
             <Script
                 src="https://telegram.org/js/telegram-web-app.js"
                 strategy="beforeInteractive"

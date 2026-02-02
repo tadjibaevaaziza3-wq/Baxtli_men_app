@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Allura } from "next/font/google";
 import "./globals.css";
 import GoogleAnalytics from "@/components/analytics/google-analytics";
 import YandexMetrica from "@/components/analytics/yandex-metrica";
 import MetaPixel from "@/components/analytics/meta-pixel";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const allura = Allura({ subsets: ["latin"], weight: "400", variable: "--font-allura" });
 
 export const metadata: Metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://baxtli-men.uz'),
@@ -54,7 +55,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="uz">
-            <body className={inter.className}>
+            <body className={`${inter.className} ${allura.variable}`}>
                 {children}
                 <GoogleAnalytics />
                 <YandexMetrica />

@@ -1,16 +1,17 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Allura&display=swap');
 
 :root {
-  /* Brand Monochrome Palette */
-  --bm-bg: #FFFFFF;
-  --bm-fg: #0B0B0B;
-  --bm-muted: #6B6B6B;
-  --bm-border: #E8E8E8;
-  --bm-surface: #FAFAFA;
-  
+  /* Brand Palette (Logo Based) */
+  --bm-bg: #f6f9fe;
+  --bm-fg: #114539;
+  --bm-muted: #5C7A74;
+  /* Desaturated Green */
+  --bm-border: #DDE5F0;
+  /* Light Blue-Grey */
+  --bm-surface: #FFFFFF;
+
   /* Brand Accents */
-  --bm-accent: #111111;
+  --bm-accent: #114539;
   --bm-accent-beige: #D8D1C5;
   --bm-danger: #B42318;
   --bm-success: #067647;
@@ -31,9 +32,9 @@
   --color-bm-accent-beige: var(--bm-accent-beige);
   --color-bm-danger: var(--bm-danger);
   --color-bm-success: var(--bm-success);
-  
+
   --radius-bm: var(--bm-radius);
-  --font-cursive: "Allura", cursive;
+  --font-cursive: var(--font-allura), cursive;
 }
 
 body {

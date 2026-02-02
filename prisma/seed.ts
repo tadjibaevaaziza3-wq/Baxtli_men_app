@@ -1,3 +1,4 @@
+
 import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -31,89 +32,128 @@ async function main() {
         }
     });
 
-    // 2. Online Course: Tana Yogaterapiyasi (Men)
-    await prisma.product.create({
-        data: {
-            title: "Тана йогатерапияси — Стандарт (Эркаклар учун)",
-            description: "Эркаклар касалликларига даъво, либидо кўтарилади, нерв тизимини тиклайди...",
+    console.log("Trainer profile ensured.");
+
+    const products = [
+        // 1. Online Course: Tana Yogaterapiyasi (Men)
+        {
+            title: "Тана йогатерапияси — Стандарт (для мужчин)",
+            description: "Эркаклар учун махсус курс: 5 та йога машқлар, нафас олиш усуллари. Эндокрин тизим, простата ва бел оғриқлари учун.",
             priceUzs: 300000,
             type: ProductType.ONLINE_COURSE,
-            durationDays: 30,
-            isPublished: true,
+            durationDays: 30, // Assuming 1 month access based on context
             course: {
                 create: {
-                    title: "Тана йогатерапияси",
-                    description: "5 та йога машқлар ва нафас олиш усуллари",
+                    title: "Тана йогатерапияси (Эркаклар)",
+                    description: "Эркаклар саломатлиги учун махсус дастур.",
                     chatRoom: { create: {} }
                 }
             }
-        }
-    });
-
-    // 3. Subscription: Baxtli Ayollar Klubi - Standart
-    await prisma.product.create({
-        data: {
-            title: "Бахтли аёллар клуби — Стандарт пакет",
-            description: "Гормонал йога, аёллик энергиясини оширувчи, хайз куни йогаси...",
+        },
+        // 2. Subscription: Baxtli Ayollar Klubi - Standart
+        {
+            title: "Бахтли аёллар клуби — Стандарт пакет (для женщин)",
+            description: "1380+ дарсликлар. Гормонал йога, аёллик энергияси, лимфодренаж, бўғимлар учун.",
             priceUzs: 100000,
             type: ProductType.ONLINE_SUBSCRIPTION,
             durationDays: 30,
-            isPublished: true
-        }
-    });
-
-    // 4. Subscription: Baxtli Ayollar Klubi - Premium
-    await prisma.product.create({
-        data: {
-            title: "Бахтли аёллар клуби — Премиум пакет",
-            description: "Ҳар кун йога, янги дарслар, чатда индивидуал консультация...",
+        },
+        // 3. Subscription: Baxtli Ayollar Klubi - Premium
+        {
+            title: "Бахтли аёллар клуби — Премиум пакет (для женщин)",
+            description: "Барча Стандарт имкониятлари + 24/7 кураторлик, индивидуал консультация, ҳар ой видеочат.",
             priceUzs: 200000,
             type: ProductType.ONLINE_SUBSCRIPTION,
             durationDays: 30,
-            isPublished: true
-        }
-    });
-
-    // 5. Course: Tabiiy Yosharish (Yuz Yogasi)
-    await prisma.product.create({
-        data: {
-            title: "ТАБИЙ ЁШАРИШ (ЮЗ ЙОГАСИ) — 3в1",
-            description: "15 дарс юз машқлари, 30та машқ осанка ва тос учун, тейпирование...",
+        },
+        // 4. Course: Tabiiy Yosharish (Face Yoga)
+        {
+            title: "ТАБИЙ ЁШАРИШ (ЮЗ ЙОГАСИ) — 3в1 (для женщин)",
+            description: "Юз машқлари (15 дарс), Осанка (30 машқ), Тейпирование. 1 Zoom учрашув.",
             priceUzs: 300000,
             type: ProductType.ONLINE_COURSE,
-            durationDays: 90,
-            isPublished: true,
+            durationDays: 90, // Lifetime access imply long duration, setting 90 for now or handling logic elsewhere
             course: {
                 create: {
                     title: "Табиий Ёшариш",
-                    description: "Юз машқлари ва гўзаллик сирлари",
+                    description: "Юз ва тана гўзаллиги учун комплекс.",
                     chatRoom: { create: {} }
                 }
             }
-        }
-    });
-
-    // 6. Consultation: Online
-    await prisma.product.create({
-        data: {
-            title: "Психологик консультация (аёллар учун) — онлайн 1 сессия",
-            description: "90% психологик техника, анализ ситуации, 1 практика + домашние практики...",
+        },
+        // 5. Consultation: Online 1 Session
+        {
+            title: "Психологик консультация (аёллар учун) — 1 онлайн сессия",
+            description: "90% амалиёт. Вазиятни таҳлил қилиш, онг ости билан ишлаш. 1 соат (биринчиси 1.5 соат).",
             priceUzs: 1000000,
             type: ProductType.CONSULTATION,
-            isPublished: true
-        }
-    });
-
-    // 7. Offline: Sophie Fit Zone
-    await prisma.product.create({
-        data: {
-            title: "Sophie Fit Zone: 12 уроков (аёллар учун)",
-            description: "Сешанба • Пайшанба • Шанба. ЧОРСУ, Беруний 12В...",
+            durationDays: 1, // Consumed immediately
+        },
+        // 6. Consultation: Offline 1 Session
+        {
+            title: "Психологик консультация (аёллар учун) — 1 жонли офлайн сессия",
+            description: "Жонли учрашув. 90% амалиёт. Вазиятни таҳлил қилиш. 1 соат (биринчиси 1.5 соат).",
+            priceUzs: 2000000,
+            type: ProductType.CONSULTATION,
+            durationDays: 1,
+        },
+        // 7. Offline: Sophie Fit Zone
+        {
+            title: "Sophie Fit Zone: 12 уроков (для женщин)",
+            description: "Офлайн машғулотлар. Чорсу, Беруний 12В. Сешанба, Пайшанба, Шанба (10:00, 11:15).",
             priceUzs: 800000,
             type: ProductType.OFFLINE_PACKAGE,
-            isPublished: true
+            durationDays: 30, // 12 lessons usually for a month
+        },
+        // 8. Offline: Fit-Dance
+        {
+            title: "Fit-Dance: 12 уроков (для женщин)",
+            description: "Офлайн рақс-фитнес. Дархон, Аккурган 18А. Сешанба, Пайшанба, Шанба (13:00).",
+            priceUzs: 1500000,
+            type: ProductType.OFFLINE_PACKAGE,
+            durationDays: 30,
+        },
+        // 9. Offline: DoYogaStudios
+        {
+            title: "DoYogaStudios: 8 уроков (для женщин)",
+            description: "Махтумкули к-си, 45. Душанба, Чоршанба, Жума (10:00, 11:30).",
+            priceUzs: 1600000,
+            type: ProductType.OFFLINE_PACKAGE,
+            durationDays: 30,
         }
-    });
+    ];
+
+    for (const p of products) {
+        // Upsert based on title to avoid duplicates
+        const existing = await prisma.product.findFirst({
+            where: { title: p.title }
+        });
+
+        if (existing) {
+            console.log(`Updating ${p.title}...`);
+            await prisma.product.update({
+                where: { id: existing.id },
+                data: {
+                    description: p.description,
+                    priceUzs: p.priceUzs,
+                    type: p.type,
+                    durationDays: p.durationDays,
+                    isPublished: true
+                }
+            });
+        } else {
+            console.log(`Creating ${p.title}...`);
+            const { course, ...productData } = p;
+
+            await prisma.product.create({
+                data: {
+                    ...productData,
+                    isPublished: true,
+                    course: course ? { create: course.create } : undefined
+                }
+            });
+        }
+    }
 
     console.log("Seeding finished.");
 }
