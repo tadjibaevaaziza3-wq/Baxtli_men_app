@@ -8,13 +8,13 @@ const JWT_SECRET = new TextEncoder().encode(
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { roomId: string } }
+    { params }: { params: Promise<{ roomId: string }> }
 ) {
     try {
         const token = req.cookies.get("auth_token")?.value;
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const { roomId } = params;
+        const { roomId } = await params;
 
         const messages = await prisma.chatMessage.findMany({
             where: { roomId, isDeleted: false },
@@ -40,7 +40,7 @@ export async function GET(
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { roomId: string } }
+    { params }: { params: Promise<{ roomId: string }> }
 ) {
     try {
         const token = req.cookies.get("auth_token")?.value;
@@ -48,7 +48,7 @@ export async function POST(
 
         const { payload } = await jwtVerify(token, JWT_SECRET);
         const userId = payload.userId as string;
-        const { roomId } = params;
+        const { roomId } = await params;
         const { text } = await req.json();
 
         if (!text || text.trim().length === 0) {
@@ -79,6 +79,51 @@ export async function POST(
         return NextResponse.json({ message });
     } catch (error) {
         console.error("Send message error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ roomId: string }> }
+) {
+    try {
+        const token = req.cookies.get("auth_token")?.value;
+        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        const userId = payload.userId as string;
+        const userRole = payload.role as string;
+        const { searchParams } = new URL(req.url);
+        const messageId = searchParams.get("messageId");
+
+        if (!messageId) {
+            return NextResponse.json({ error: "Message ID required" }, { status: 400 });
+        }
+
+        const message = await prisma.chatMessage.findUnique({
+            where: { id: messageId },
+            select: { userId: true }
+        });
+
+        if (!message) return NextResponse.json({ error: "Message not found" }, { status: 404 });
+
+        // Allow delete if Admin or Owner
+        if (userRole !== "ADMIN" && message.userId !== userId) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        await prisma.chatMessage.update({
+            where: { id: messageId },
+            data: {
+                isDeleted: true,
+                deletedByAdminId: userRole === "ADMIN" ? userId : undefined
+            }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Delete message error:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

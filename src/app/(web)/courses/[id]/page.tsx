@@ -10,15 +10,16 @@ import { Clock, Users, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata(
     { params }: Props,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
+    const { id } = await params;
     const product = await (prisma as any).product.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: { course: true }
     });
 
@@ -41,8 +42,9 @@ export async function generateMetadata(
 }
 
 export default async function PublicCoursePage({ params }: Props) {
+    const { id } = await params;
     const product = await prisma.product.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             course: {
                 include: {

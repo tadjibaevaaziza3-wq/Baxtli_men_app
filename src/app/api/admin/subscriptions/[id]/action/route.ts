@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { action } = await req.json();
-        const subId = params.id;
+        const { id: subId } = await params;
 
         const sub = await prisma.subscription.findUnique({
             where: { id: subId },

@@ -17,7 +17,8 @@ interface Message {
     };
 }
 
-export default function ChatRoomPage({ params }: { params: { roomId: string } }) {
+export default function ChatRoomPage({ params: paramsPromise }: { params: Promise<{ roomId: string }> }) {
+    const { roomId } = use(paramsPromise);
     const router = useRouter();
     const { user } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -28,7 +29,7 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
 
     const fetchMessages = async () => {
         try {
-            const res = await fetch(`/api/chats/${params.roomId}/messages`);
+            const res = await fetch(`/api/chats/${roomId}/messages`);
             const data = await res.json();
             if (data.messages) {
                 setMessages(data.messages);
@@ -122,10 +123,10 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
                                             </span>
                                         )}
                                         <div className={`px-4 py-2 rounded-2xl text-sm shadow-md ${isMine
-                                                ? "bg-[#c9a86a] text-[#0a2f1e] rounded-tr-none font-medium"
-                                                : isTrainer
-                                                    ? "bg-[#1a4d35] text-white border border-[#c9a86a]/30 rounded-tl-none"
-                                                    : "bg-[#0d3d27] text-gray-200 border border-[#1a4d35] rounded-tl-none"
+                                            ? "bg-[#c9a86a] text-[#0a2f1e] rounded-tr-none font-medium"
+                                            : isTrainer
+                                                ? "bg-[#1a4d35] text-white border border-[#c9a86a]/30 rounded-tl-none"
+                                                : "bg-[#0d3d27] text-gray-200 border border-[#1a4d35] rounded-tl-none"
                                             }`}>
                                             {msg.text}
                                         </div>
@@ -154,8 +155,8 @@ export default function ChatRoomPage({ params }: { params: { roomId: string } })
                         type="submit"
                         disabled={!newMessage.trim() || sending}
                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${newMessage.trim() && !sending
-                                ? "bg-[#c9a86a] text-[#0a2f1e] shadow-[0_0_15px_rgba(201,168,106,0.3)]"
-                                : "bg-gray-800 text-gray-600"
+                            ? "bg-[#c9a86a] text-[#0a2f1e] shadow-[0_0_15px_rgba(201,168,106,0.3)]"
+                            : "bg-gray-800 text-gray-600"
                             }`}
                     >
                         {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}

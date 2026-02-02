@@ -35,8 +35,9 @@ interface Product {
         }[];
     };
 }
-
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+import { use } from "react";
+export default function ProductDetailPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+    const params = use(paramsPromise);
     const router = useRouter();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
