@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Allura&display=swap');
+
+:root {
+  /* Brand Monochrome Palette */
+  --bm-bg: #FFFFFF;
+  --bm-fg: #0B0B0B;
+  --bm-muted: #6B6B6B;
+  --bm-border: #E8E8E8;
+  --bm-surface: #FAFAFA;
+  
+  /* Brand Accents */
+  --bm-accent: #111111;
+  --bm-accent-beige: #D8D1C5;
+  --bm-danger: #B42318;
+  --bm-success: #067647;
+
+  /* Component Tokens */
+  --bm-radius: 18px;
+  --bm-radius-pill: 999px;
+  --bm-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.05);
+}
+
+@theme inline {
+  --color-bm-bg: var(--bm-bg);
+  --color-bm-fg: var(--bm-fg);
+  --color-bm-muted: var(--bm-muted);
+  --color-bm-border: var(--bm-border);
+  --color-bm-surface: var(--bm-surface);
+  --color-bm-accent: var(--bm-accent);
+  --color-bm-accent-beige: var(--bm-accent-beige);
+  --color-bm-danger: var(--bm-danger);
+  --color-bm-success: var(--bm-success);
+  
+  --radius-bm: var(--bm-radius);
+  --font-cursive: "Allura", cursive;
+}
+
+body {
+  background: var(--bm-bg);
+  color: var(--bm-fg);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Helper Class for Branding Signature */
+.bm-signature {
+  font-family: var(--font-cursive);
+}

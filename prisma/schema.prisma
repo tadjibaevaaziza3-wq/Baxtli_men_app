@@ -1,0 +1,385 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL") // Managed by prisma.config.ts in Prisma 7
+}
+
+enum Role {
+  CLIENT
+  TRAINER
+  ADMIN
+}
+
+enum UserSource {
+  TELEGRAM
+  WEB
+}
+
+enum ProductType {
+  ONLINE_COURSE
+  ONLINE_SUBSCRIPTION
+  OFFLINE_PACKAGE
+  CONSULTATION
+}
+
+enum OrderStatus {
+  CREATED
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  CANCELED
+}
+
+enum AssetType {
+  VIDEO
+  PDF
+  IMAGE
+  OTHER
+}
+
+enum NotificationChannel {
+  TELEGRAM
+  INAPP
+}
+
+enum AiDocSourceType {
+  COURSE
+  FAQ
+  TRAINER_CHAT
+}
+
+enum AiDocStatus {
+  DRAFT
+  APPROVED
+  GOLD
+}
+
+model User {
+  id                    String                @id @default(cuid())
+  telegramId            BigInt?               @unique
+  username              String?               @unique
+  fullName              String
+  role                  Role                  @default(CLIENT)
+  source                UserSource            @default(WEB)
+  watermarkId           String                @unique @default(nanoid(10))
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  isDeleted             Boolean               @default(false)
+
+  trainerProfile        TrainerProfile?
+  agreementAcceptances AgreementAcceptance[]
+  orders                Order[]
+  subscriptions         Subscription[]
+  progress              Progress[]
+  chatMessages          ChatMessage[]
+  enrollments           OfflinePackageEnrollment[]
+  bookings              ConsultationBooking[]
+  adminActions          AdminAuditLog[]       @relation("AdminActions")
+  notifications         Notification[]
+  aiLogs                AiConversationLog[]
+}
+
+model TrainerProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  bio       String?  @db.Text
+  avatarUrl String?
+  socials   Json?    // { instagram: "...", telegram: "..." }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AgreementAcceptance {
+  id         String   @id @default(cuid())
+  userId     String
+  version    String
+  acceptedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  title         String
+  description   String      @db.Text
+  priceUzs      Int
+  type          ProductType
+  durationDays  Int         @default(30)
+  isPublished   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  isDeleted     Boolean     @default(false)
+
+  courseId      String?     @unique
+  course        Course?     @relation(fields: [courseId], references: [id])
+  
+  orders        Order[]
+  subscriptions Subscription[]
+  enrollments   OfflinePackageEnrollment[]
+  bookings      ConsultationBooking[]
+}
+
+model Course {
+  id            String          @id @default(cuid())
+  title         String
+  description   String          @db.Text
+  coverImageUrl String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  product       Product?
+  modules       Module[]
+  chatRoom      CourseChatRoom?
+  aiDocs        AiKnowledgeDoc[]
+}
+
+model Module {
+  id         String   @id @default(cuid())
+  courseId   String
+  title      String
+  orderIndex Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  course     Course   @relation(fields: [courseId], references: [id])
+  lessons    Lesson[]
+}
+
+model Lesson {
+  id                   String     @id @default(cuid())
+  moduleId             String
+  title                String
+  orderIndex           Int
+  durationSec          Int?
+  isFreePreview        Boolean    @default(false)
+  videoProviderAssetId String?    // Cloudflare Stream UID / Mux Playback ID
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  module               Module     @relation(fields: [moduleId], references: [id])
+  progress             Progress[]
+  assets               Asset[]
+
+  @@index([moduleId, orderIndex])
+}
+
+model Asset {
+  id        String    @id @default(cuid())
+  lessonId  String
+  type      AssetType
+  url       String
+  title     String
+  createdAt DateTime  @default(now())
+
+  lesson    Lesson    @relation(fields: [lessonId], references: [id])
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  userId     String
+  productId  String
+  provider   String      // "click" or "payme"
+  amountUzs  Int
+  status     OrderStatus @default(CREATED)
+  idempotencyKey String? @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id])
+  product    Product     @relation(fields: [productId], references: [id])
+  payments   Payment[]
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  orderId       String
+  provider      String
+  transactionId String   @unique
+  status        String
+  paidAt        DateTime?
+  payload       Json?
+  createdAt     DateTime @default(now())
+
+  order         Order    @relation(fields: [orderId], references: [id])
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  userId          String
+  productId       String
+  startDate       DateTime           @default(now())
+  endDate         DateTime
+  status          SubscriptionStatus @default(ACTIVE)
+  notify3dSent    Boolean            @default(false)
+  manualOverride  Boolean            @default(false)
+  lastNotifiedAt  DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user            User               @relation(fields: [userId], references: [id])
+  product         Product            @relation(fields: [productId], references: [id])
+
+  @@index([userId, productId, endDate])
+  @@index([status, endDate])
+}
+
+model OfflinePackageEnrollment {
+  id            String   @id @default(cuid())
+  userId        String
+  productId     String
+  totalLessons  Int
+  usedLessons   Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+  product       Product  @relation(fields: [productId], references: [id])
+}
+
+model ConsultationBooking {
+  id            String    @id @default(cuid())
+  userId        String
+  productId     String
+  scheduledAt   DateTime?
+  isCompleted   Boolean   @default(false)
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id])
+  product       Product   @relation(fields: [productId], references: [id])
+}
+
+model Progress {
+  id              String   @id @default(cuid())
+  userId          String
+  lessonId        String
+  completed       Boolean  @default(false)
+  lastPositionSec Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  lesson          Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
+
+model CourseChatRoom {
+  id        String        @id @default(cuid())
+  courseId  String        @unique
+  createdAt DateTime      @default(now())
+
+  course    Course        @relation(fields: [courseId], references: [id])
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id               String         @id @default(cuid())
+  roomId           String
+  userId           String
+  text             String         @db.Text
+  attachments      Json?
+  isDeleted        Boolean        @default(false)
+  deletedByAdminId String?
+  createdAt        DateTime       @default(now())
+
+  room             CourseChatRoom @relation(fields: [roomId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
+
+  @@index([roomId, createdAt])
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  channel   NotificationChannel
+  type      String?             // e.g. "SUBSCRIPTION_EXPIRING_3D"
+  title     String
+  body      String              @db.Text
+  payload   Json?
+  status    String              // "sent", "failed", "read"
+  sentAt    DateTime            @default(now())
+  readAt    DateTime?
+
+  user      User                @relation(fields: [userId], references: [id])
+}
+
+model SystemJobLog {
+  id             String   @id @default(cuid())
+  jobName        String
+  startedAt      DateTime @default(now())
+  finishedAt     DateTime?
+  status         String   // "success", "failed"
+  processedCount Int      @default(0)
+  errorsJson     Json?
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  action       String
+  targetType   String
+  targetId     String
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+
+  admin        User     @relation("AdminActions", fields: [adminId], references: [id])
+}
+
+model AiKnowledgeDoc {
+  id          String           @id @default(cuid())
+  courseId    String?
+  title       String
+  contentText String           @db.Text
+  sourceType  AiDocSourceType  @default(COURSE)
+  status      AiDocStatus      @default(DRAFT)
+  tags        String[]
+  language    String           @default("uz")
+  createdById String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Vector storage for RAG (text-embedding-004 = 768 dimensions)
+  // Note: pgvector extension must be enabled in DB
+  embedding   Unsupported("vector(768)")?
+
+  course      Course?          @relation(fields: [courseId], references: [id])
+
+  @@index([status, language])
+  @@index([courseId])
+}
+
+model AiConversationLog {
+  id          String   @id @default(cuid())
+  userId      String
+  question    String   @db.Text
+  answer      String   @db.Text
+  sourcesJson Json?
+  feedback    Int?     // 1 for positive, -1 for negative
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model AiKbIngestionEvent {
+  id         String   @id @default(cuid())
+  source     String
+  status     String   // "success", "failed", "pending"
+  errorJson  Json?
+  createdAt  DateTime @default(now())
+}
